@@ -1,0 +1,150 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Oxpecker OpenAPI Bug Test API",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "https://localhost:7124/"
+    }
+  ],
+  "paths": {
+    "/hello": {
+      "get": {
+        "tags": [
+          "OxpeckerOpenApi.BugTest"
+        ],
+        "operationId": "Hello",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/greetings/{name}": {
+      "get": {
+        "tags": [
+          "OxpeckerOpenApi.BugTest"
+        ],
+        "operationId": "GetGreeting",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons": {
+      "post": {
+        "tags": [
+          "OxpeckerOpenApi.BugTest"
+        ],
+        "summary": "Search for persons based on query parameters",
+        "description": "Returns a list of persons matching the search criteria provided in the query parameters.",
+        "operationId": "SearchPersons",
+        "parameters": [
+          {
+            "name": "Name",
+            "in": "query",
+            "description": "Filter by name (optional)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Occupation",
+            "in": "query",
+            "description": "Filter by occupation (optional)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Person"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Person": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "age": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "occupation": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "yearsExperience": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "OxpeckerOpenApi.BugTest"
+    }
+  ]
+}
