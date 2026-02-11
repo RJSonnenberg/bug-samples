@@ -1,5 +1,7 @@
 module OxpeckerOpenApi.BugTest.Types
 
+open System.ComponentModel.DataAnnotations
+
 [<CLIMutable>]
 type PersonSearchRequest =
     {
@@ -14,4 +16,26 @@ type Person =
         Age: int
         Occupation: string option
         YearsExperience: int option
+    }
+
+
+[<CLIMutable>]
+type AnimalSearchRequest =
+    {
+        Name: string option
+        Species: string option
+        Vaccinated: bool option
+    }
+
+[<CLIMutable>]
+type Animal =
+    {
+        [<Required()>]
+        Name: string
+        
+        [<Required()>]
+        Species: string option
+
+        Age: int option
+        Vaccinated: bool
     }

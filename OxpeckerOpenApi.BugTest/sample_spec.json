@@ -102,10 +102,94 @@
           }
         }
       }
+    },
+    "/animals": {
+      "post": {
+        "tags": [
+          "OxpeckerOpenApi.BugTest"
+        ],
+        "summary": "Search for animals based on query parameters",
+        "description": "Returns a list of animals matching the search criteria provided in the query parameters.",
+        "operationId": "SearchAnimals",
+        "parameters": [
+          {
+            "name": "Name",
+            "in": "query",
+            "description": "Filter by name (required)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Species",
+            "in": "query",
+            "description": "Filter by species (optional)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Vaccinated",
+            "in": "query",
+            "description": "Filter by vaccination status (optional)",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Animal"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "Animal": {
+        "required": [
+          "name",
+          "species"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "species": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "age": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "vaccinated": {
+            "type": "boolean"
+          }
+        }
+      },
       "Person": {
         "type": "object",
         "properties": {
