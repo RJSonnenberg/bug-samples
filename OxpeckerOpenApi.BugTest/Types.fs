@@ -44,3 +44,10 @@ type Animal =
         Age: int option
         Vaccinated: bool
     }
+
+[<CLIMutable>]
+type NumberTestRequest =
+    { Value: int
+      Price: decimal
+      Score: float
+      Description: string option }

@@ -69,6 +69,46 @@ module private UnionHelpers =
         else
             false
 
+    /// Check if this is an F# list type (should be mapped to array, not union)
+    let isFSharpListType (t: Type) =
+        if t.IsGenericType then
+            let gtd = t.GetGenericTypeDefinition()
+            // Check both FullName and Name to handle different representations
+            gtd.FullName = "Microsoft.FSharp.Collections.FSharpList`1" ||
+            gtd.Name = "FSharpList`1" ||
+            (not (isNull gtd.FullName) && gtd.FullName.Contains("FSharpList"))
+        else
+            false
+
+    /// Generate schema for F# list as an array type
+    let generateListSchemaAsync
+        (schema: OpenApiSchema)
+        (listType: Type)
+        (ctx: OpenApiSchemaTransformerContext)
+        (ct: CancellationToken)
+        =
+        task {
+            // Get the element type (T in FSharpList<T>)
+            let elementType = listType.GetGenericArguments().[0]
+            
+            // Set schema to array type
+            schema.Type <- JsonSchemaType.Array
+            
+            // Get or create schema for the element type
+            let! itemSchema = ctx.GetOrCreateSchemaAsync(elementType, null, ct)
+            schema.Items <- itemSchema
+            
+            if String.IsNullOrEmpty(schema.Description) then
+                schema.Description <- sprintf "Array of %s" elementType.Name
+            
+            // Clear properties that shouldn't be set for arrays
+            schema.Properties <- Unchecked.defaultof<_>
+            schema.Required <- Unchecked.defaultof<_>
+            schema.OneOf <- Unchecked.defaultof<_>
+            schema.Discriminator <- Unchecked.defaultof<_>
+            schema.Enum <- Unchecked.defaultof<_>
+        }
+
     /// Create a schema for a field type
     let createFieldSchema (fieldType: Type) =
         let schema = OpenApiSchema()
@@ -303,10 +343,14 @@ type FSharpUnionSchemaTransformer() =
             (schema: OpenApiSchema, ctx: OpenApiSchemaTransformerContext, ct: CancellationToken)
             : Task =
             let targetType = ctx.JsonTypeInfo.Type
-            // Process only F# union types (excluding option types)
+            // Process F# list types as arrays, and other union types as discriminated unions (excluding option types)
             task {
                 match targetType with
+                | t when UnionHelpers.isFSharpListType t ->
+                    // F# lists should be mapped to arrays for OpenAPI/TypeScript consumption
+                    do! UnionHelpers.generateListSchemaAsync schema t ctx ct
                 | t when not(UnionHelpers.isOptionType t) && FSharpType.IsUnion(t, true) ->
+                    // Other discriminated unions use oneOf with discriminator
                     do! UnionHelpers.transformUnionSchemaAsync schema t ctx ct
                 | _ -> ()
             }

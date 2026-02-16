@@ -131,5 +131,46 @@ let endpoints =
                     op.Parameters <- parameters
                     Task.CompletedTask
             ))
+            route "/test-number-deserialization" testNumberDeserializationHandler
+            |> configureEndpoint _.WithName("TestNumberDeserialization")
+                                  .WithTags([|"testing"|])
+                                  .WithSummary("Test number deserialization with AllowReadingFromString")
+                                  .WithDescription("Test endpoint to verify that numbers can be deserialized from strings when using AllowReadingFromString. This endpoint accepts JSON with numbers that might be strings.")
+            |> addOpenApi (OpenApiConfig(
+                requestBody = RequestBody(typeof<NumberTestRequest>),
+                responseBodies = [| ResponseBody(typeof<string>) |]
+            ))
+        ]
+        GET [
+            route "/complex-data" complexDataHandler
+            |> configureEndpoint _.WithName("GetComplexData")
+                                  .WithTags([|"complex"|])
+                                  .WithSummary("Get complex nested data with lists and unions")
+                                  .WithDescription("Returns a MapData structure containing locations (union type), status (enum-like union), and altitude. Tests nested structures with lists of unions and optional fields.")
+            |> addOpenApiSimple<unit, MapData>
+        ]
+        GET [
+            route "/http-responses" httpResponseHandler
+            |> configureEndpoint _.WithName("GetHttpResponses")
+                                  .WithTags([|"complex"|])
+                                  .WithSummary("Get list of HTTP response unions")
+                                  .WithDescription("Returns a list of HttpResponse values demonstrating different union cases with varying field types and optional fields.")
+            |> addOpenApiSimple<unit, HttpResponse list>
+        ]
+        GET [
+            route "/api-request" apiRequestHandler
+            |> configureEndpoint _.WithName("GetApiRequest")
+                                  .WithTags([|"complex"|])
+                                  .WithSummary("Get a complex API request record")
+                                  .WithDescription("Returns an ApiRequest containing nested union types, optional fields, and list of strings. Tests complex record structures.")
+            |> addOpenApiSimple<unit, ApiRequest>
+        ]
+        GET [
+            route "/map-data-list" mapDataListHandler
+            |> configureEndpoint _.WithName("GetMapDataList")
+                                  .WithTags([|"complex"|])
+                                  .WithSummary("Get a list of map data with nested unions")
+                                  .WithDescription("Returns multiple MapData records each containing lists of Location unions. Tests lists of complex record structures.")
+            |> addOpenApiSimple<unit, MapData list>
         ]
     ]

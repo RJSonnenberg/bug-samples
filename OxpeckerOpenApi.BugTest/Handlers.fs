@@ -185,18 +185,18 @@ let testAnimalColorHandler: EndpointHandler =
             return! text jsonString ctx
         }
 
-/// Response type that includes all union type examples for OpenAPI schema generation
+/// Response type that includes supported union type examples for OpenAPI schema generation
+/// Note: Removed unsupported types (Result, PaymentMethod, ApiResponse, ContactInfo, Address)
+/// These generic and complex unions do not generate schemas in Oxpecker
 type UnionExamplesResponse =
     { SimpleStatus: SimpleStatus list
       Shape: Shape list
-      PaymentMethod: PaymentMethod list
-      ResultSuccess: Result<int, string>
-      ResultFailure: Result<int, string>
-      ApiResponseUser: ApiResponse
-      ApiResponseError: ApiResponse
-      ContactInfo: ContactInfo list
+      HttpStatus: HttpStatus list
       AnimalColor: AnimalColor list
-      Animals: Animal list }
+      Animals: Animal list
+      SampleLocation: Location
+      SampleMapData: MapData
+      Responses: HttpResponse list }
 
 /// Handler that returns dummy data for all union types to visualize in OpenAPI spec
 let unionExamplesHandler: EndpointHandler =
@@ -221,27 +221,13 @@ let unionExamplesHandler: EndpointHandler =
                     Triangle(8.0, 6.0)
                 ]
 
-                // PaymentMethod examples (mixed union - some with data, some without)
-                PaymentMethod = [
-                    Cash
-                    CreditCard("1234-5678-9012-3456", DateTime(2025, 12, 31))
-                    BankTransfer("ACC123456789")
-                    PayPal("user@example.com")
-                ]
-
-                // Result examples (generic union)
-                ResultSuccess = Success 42
-                ResultFailure = Failure "Error occurred"
-
-                // ApiResponse examples (multi-field union)
-                ApiResponseUser = UserData("John Doe", 30)
-                ApiResponseError = ErrorMessage(404, "Not Found")
-
-                // ContactInfo examples (union with nested record)
-                ContactInfo = [
-                    Email "test@example.com"
-                    Phone "+1-555-0123"
-                    MailingAddress { Street = "123 Main St"; City = "Springfield"; ZipCode = "12345" }
+                // HTTP Status examples (enum-like)
+                HttpStatus = [
+                    OK
+                    Created
+                    BadRequest
+                    NotFound
+                    ServerError
                 ]
 
                 // AnimalColor examples (enum-like union from Types.fs)
@@ -259,6 +245,28 @@ let unionExamplesHandler: EndpointHandler =
                     { Name = "Tweety"; Species = Some "Bird"; Age = None; Color = Some White; Vaccinated = true }
                     { Name = "Nemo"; Species = Some "Fish"; Age = Some 1; Color = Some Spotted; Vaccinated = false }
                     { Name = "Mystery"; Species = Some "Unknown"; Age = None; Color = None; Vaccinated = false }
+                ]
+
+                // Sample Location union (new complex type)
+                SampleLocation = PointLocation { X = 42.5; Y = 73.2; Z = Some 1000.0 }
+
+                // Sample MapData (record with unions and lists)
+                SampleMapData = {
+                    Name = "Example Region"
+                    Locations = [
+                        PointLocation { X = 0.0; Y = 0.0; Z = None }
+                        AreaName "Example Area"
+                    ]
+                    Status = OK
+                    Altitude = Some 500.0
+                }
+
+                // HTTP Response examples (union with various field types)
+                Responses = [
+                    SuccessResponse(200, "Operation successful")
+                    RedirectResponse(301, "/new-path")
+                    ErrorResponse(400, "Bad request", Some "Invalid format")
+                    FatalError(500, "Internal error")
                 ]
             }
 
@@ -298,4 +306,88 @@ let singleAnimalColorHandler: EndpointHandler =
             let jsonString = JsonSerializer.Serialize(color, serializerOptions)
             ctx.Response.ContentType <- "application/json"
             return! text jsonString ctx
+        }
+
+/// Handler that tests number deserialization with AllowReadingFromString
+let testNumberDeserializationHandler: EndpointHandler =
+    fun (ctx: HttpContext) ->
+        task {
+            try
+                let! request = ctx.BindJson<NumberTestRequest>()
+                let response =
+                    sprintf "Successfully deserialized: Value=%d, Price=%M, Score=%f, Description=%s"
+                        request.Value
+                        request.Price
+                        request.Score
+                        (request.Description |> Option.defaultValue "none")
+                return! text response ctx
+            with ex ->
+                ctx.Response.StatusCode <- 400
+                return! text (sprintf "Error: %s" ex.Message) ctx
+        }
+/// Handler returning complex nested data with lists and unions
+let complexDataHandler: EndpointHandler =
+    fun (ctx: HttpContext) ->
+        task {
+            let mapData: MapData =
+                { Name = "Test Region"
+                  Locations =
+                    [ PointLocation { X = 10.5; Y = 20.3; Z = Some 100.0 }
+                      AreaName "Mountain Range"
+                      PointLocation { X = 15.0; Y = 25.0; Z = None }
+                      Unknown ]
+                  Status = OK
+                  Altitude = Some 5280.0 }
+
+            return! json mapData ctx
+        }
+
+/// Handler returning union with various field types
+let httpResponseHandler: EndpointHandler =
+    fun (ctx: HttpContext) ->
+        task {
+            let responses: HttpResponse list =
+                [ SuccessResponse(200, "Operation completed successfully")
+                  ErrorResponse(400, "Invalid request", Some "Missing required field: id")
+                  RedirectResponse(301, "https://example.com/new-location")
+                  FatalError(500, "Database connection failed") ]
+
+            return! json responses ctx
+        }
+
+/// Handler returning record with nested unions
+let apiRequestHandler: EndpointHandler =
+    fun (ctx: HttpContext) ->
+        task {
+            let request: ApiRequest =
+                { Id = "req-12345"
+                  Timestamp = DateTime.UtcNow
+                  Status = Created
+                  Response = Some (SuccessResponse(201, "Resource created"))
+                  Tags = [ "api"; "test"; "v1" ] }
+
+            return! json request ctx
+        }
+
+/// Handler testing map data with multiple locations
+let mapDataListHandler: EndpointHandler =
+    fun (ctx: HttpContext) ->
+        task {
+            let mapDataList: MapData list =
+                [ { Name = "Region A"
+                    Locations = [ PointLocation { X = 0.0; Y = 0.0; Z = None } ]
+                    Status = OK
+                    Altitude = Some 0.0 }
+                  { Name = "Region B"
+                    Locations =
+                      [ AreaName "Northern Area"
+                        PointLocation { X = 100.0; Y = 100.0; Z = Some 500.0 } ]
+                    Status = BadRequest
+                    Altitude = None }
+                  { Name = "Region C"
+                    Locations = [ Unknown ]
+                    Status = ServerError
+                    Altitude = Some 2000.0 } ]
+
+            return! json mapDataList ctx
         }

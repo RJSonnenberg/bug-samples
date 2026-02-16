@@ -25,24 +25,25 @@ let addOxpecker (bldr: WebApplicationBuilder) =
             .WithUnwrapOption()               // Option<'T> serializes as T | null
         |> JsonFSharpConverter
 
-    let oxpeckerJsonOptions = JsonSerializerOptions()
-    oxpeckerJsonOptions.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase  // camelCase
-    oxpeckerJsonOptions.WriteIndented <- true
-    oxpeckerJsonOptions.NumberHandling <- JsonNumberHandling.Strict
-    oxpeckerJsonOptions.Converters.Add(jsonFSharpConverter)
+    // Options for deserialization (AllowReadingFromString - more lenient for incoming requests)
+    let deserializationJsonOptions = JsonSerializerOptions()
+    deserializationJsonOptions.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase
+    deserializationJsonOptions.WriteIndented <- true
+    deserializationJsonOptions.NumberHandling <- JsonNumberHandling.AllowReadingFromString
+    deserializationJsonOptions.Converters.Add(jsonFSharpConverter)
 
     bldr.Services
-        // Configure HttpJsonOptions (for ASP.NET Core's serialization)
+        // Configure HttpJsonOptions (for ASP.NET Core endpoints))
         .ConfigureHttpJsonOptions(fun options ->
-            options.SerializerOptions.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase
-            options.SerializerOptions.WriteIndented <- true
-            options.SerializerOptions.NumberHandling <- JsonNumberHandling.Strict
+            options.SerializerOptions.PropertyNamingPolicy <- deserializationJsonOptions.PropertyNamingPolicy
+            options.SerializerOptions.WriteIndented <- deserializationJsonOptions.WriteIndented
+            options.SerializerOptions.NumberHandling <- deserializationJsonOptions.NumberHandling
             options.SerializerOptions.Converters.Add(jsonFSharpConverter)
         )
         .AddRouting()
         .AddOxpecker()
-        // Register Oxpecker's SystemTextJsonSerializer
-        .AddSingleton<IJsonSerializer>(Oxpecker.SystemTextJsonSerializer(oxpeckerJsonOptions))
+        // Register Oxpecker's SystemTextJsonSerializer for deserialization
+        .AddSingleton<IJsonSerializer>(Oxpecker.SystemTextJsonSerializer(deserializationJsonOptions))
         .AddOpenApi(
             "v1",
             fun options ->

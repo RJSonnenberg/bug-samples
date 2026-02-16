@@ -1,0 +1,493 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Oxpecker OpenAPI Bug Test API",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5166/"
+    }
+  ],
+  "paths": {
+    "/hello": {
+      "get": {
+        "tags": [
+          "OxpeckerOpenApi.BugTest"
+        ],
+        "operationId": "Hello",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/union-examples": {
+      "get": {
+        "tags": [
+          "examples"
+        ],
+        "summary": "Get examples of all F# union types",
+        "description": "Returns dummy data for all union types (SimpleStatus, Shape, PaymentMethod, Result, ApiResponse, ContactInfo, AnimalColor). Use this to visualize the generated OpenAPI schemas for F# discriminated unions.",
+        "operationId": "GetUnionExamples",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnionExamplesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test-single-shape": {
+      "get": {
+        "tags": [
+          "examples"
+        ],
+        "summary": "Get a single Shape union value",
+        "description": "Returns a single Shape (Circle) to test union schema generation",
+        "operationId": "GetSingleShape",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shape"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test-single-color": {
+      "get": {
+        "tags": [
+          "examples"
+        ],
+        "summary": "Get a single AnimalColor union value",
+        "description": "Returns a single AnimalColor (Brown) to test enum-like union schema generation",
+        "operationId": "GetSingleAnimalColor",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalColor"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test-union-serialization": {
+      "get": {
+        "tags": [
+          "testing"
+        ],
+        "summary": "Test F# union type serialization",
+        "description": "Runs comprehensive tests of F# union type serialization/deserialization using FSharp.SystemTextJson",
+        "operationId": "TestUnionSerialization",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test-animal-color": {
+      "get": {
+        "tags": [
+          "testing"
+        ],
+        "summary": "Test AnimalColor serialization",
+        "description": "Returns sample animals to verify how AnimalColor option is serialized",
+        "operationId": "TestAnimalColor",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FSharpListOfAnimal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/greetings/{name}": {
+      "get": {
+        "tags": [
+          "OxpeckerOpenApi.BugTest"
+        ],
+        "operationId": "GetGreeting",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Search for persons based on query parameters",
+        "description": "Returns a list of persons matching the search criteria provided in the query parameters.",
+        "operationId": "SearchPersons",
+        "parameters": [
+          {
+            "name": "Name",
+            "in": "query",
+            "description": "Filter by name (optional)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Occupation",
+            "in": "query",
+            "description": "Filter by occupation (optional)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FSharpListOfPerson"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/animals": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Search for animals based on query parameters",
+        "description": "Returns a list of animals matching the search criteria provided in the query parameters.",
+        "operationId": "SearchAnimals",
+        "parameters": [
+          {
+            "name": "Name",
+            "in": "query",
+            "description": "Filter by name (required)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Species",
+            "in": "query",
+            "description": "Filter by species (optional)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Vaccinated",
+            "in": "query",
+            "description": "Filter by vaccination status (optional)",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FSharpListOfAnimal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test-number-deserialization": {
+      "post": {
+        "tags": [
+          "testing"
+        ],
+        "summary": "Test number deserialization with AllowReadingFromString",
+        "description": "Test endpoint to verify that numbers can be deserialized from strings when using AllowReadingFromString. This endpoint accepts JSON with numbers that might be strings.",
+        "operationId": "TestNumberDeserialization",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NumberTestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Animal": {},
+      "AnimalColor": {
+        "enum": [
+          "Brown",
+          "Black",
+          "White",
+          "Spotted"
+        ],
+        "type": "string",
+        "description": "F# union type with values: Brown, Black, White, Spotted"
+      },
+      "FSharpListOfAnimal": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Animal"
+        },
+        "description": "Array of Animal"
+      },
+      "FSharpListOfPerson": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Person"
+        },
+        "description": "Array of Person"
+      },
+      "NumberTestRequest": {},
+      "Person": {},
+      "Shape": {
+        "oneOf": [
+          {
+            "required": [
+              "type",
+              "radius"
+            ],
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": [
+                  "Circle"
+                ],
+                "type": "string"
+              },
+              "radius": {
+                "type": "number",
+                "format": "double"
+              }
+            },
+            "description": "Union case: Circle with 1 field(s)"
+          },
+          {
+            "required": [
+              "type",
+              "width",
+              "height"
+            ],
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": [
+                  "Rectangle"
+                ],
+                "type": "string"
+              },
+              "width": {
+                "type": "number",
+                "format": "double"
+              },
+              "height": {
+                "type": "number",
+                "format": "double"
+              }
+            },
+            "description": "Union case: Rectangle with 2 field(s)"
+          },
+          {
+            "required": [
+              "type",
+              "base_",
+              "height"
+            ],
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": [
+                  "Triangle"
+                ],
+                "type": "string"
+              },
+              "base_": {
+                "type": "number",
+                "format": "double"
+              },
+              "height": {
+                "type": "number",
+                "format": "double"
+              }
+            },
+            "description": "Union case: Triangle with 2 field(s)"
+          }
+        ],
+        "description": "F# discriminated union type with cases: Circle, Rectangle, Triangle",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "Circle": "#/components/schemas/Shape.Circle",
+            "Rectangle": "#/components/schemas/Shape.Rectangle",
+            "Triangle": "#/components/schemas/Shape.Triangle"
+          }
+        }
+      },
+      "Shape.Circle": {
+        "required": [
+          "type",
+          "radius"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "Circle"
+            ],
+            "type": "string"
+          },
+          "radius": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "description": "Union case: Circle with 1 field(s)"
+      },
+      "Shape.Rectangle": {
+        "required": [
+          "type",
+          "width",
+          "height"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "Rectangle"
+            ],
+            "type": "string"
+          },
+          "width": {
+            "type": "number",
+            "format": "double"
+          },
+          "height": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "description": "Union case: Rectangle with 2 field(s)"
+      },
+      "Shape.Triangle": {
+        "required": [
+          "type",
+          "base_",
+          "height"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "Triangle"
+            ],
+            "type": "string"
+          },
+          "base_": {
+            "type": "number",
+            "format": "double"
+          },
+          "height": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "description": "Union case: Triangle with 2 field(s)"
+      },
+      "UnionExamplesResponse": {}
+    }
+  },
+  "tags": [
+    {
+      "name": "OxpeckerOpenApi.BugTest"
+    },
+    {
+      "name": "examples"
+    },
+    {
+      "name": "testing"
+    },
+    {
+      "name": "search"
+    }
+  ]
+}
