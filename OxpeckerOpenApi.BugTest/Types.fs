@@ -20,6 +20,12 @@ type AnimalSearchRequest =
       Species: string option
       Vaccinated: bool option }
 
+type AnimalColor =
+    | Brown
+    | Black
+    | White
+    | Spotted
+
 [<CLIMutable>]
 type Animal =
     {
@@ -32,6 +38,8 @@ type Animal =
 
         [<Required>]
         Species: string option
+
+        Color: AnimalColor option
 
         Age: int option
         Vaccinated: bool

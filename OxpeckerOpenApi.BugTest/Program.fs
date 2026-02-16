@@ -12,21 +12,37 @@ open Oxpecker
 open Oxpecker.OpenApi
 
 open OxpeckerOpenApi.BugTest.Endpoints
+open OxpeckerOpenApi.BugTest.FSharpUnionSchemaTransformer
 
 let addOxpecker (bldr: WebApplicationBuilder) =
+    // Configure JSON serializer options first
+    let jsonFSharpConverter =
+        JsonFSharpOptions()
+            .WithUnionInternalTag()           // Discriminator inside: { "type": "Circle", "radius": 5.0 }
+            .WithUnionTagName("type")         // Use "type" as discriminator field
+            .WithUnionNamedFields()           // Use named properties
+            .WithUnionUnwrapFieldlessTags()   // Simple unions serialize as plain strings
+            .WithUnwrapOption()               // Option<'T> serializes as T | null
+        |> JsonFSharpConverter
+
+    let oxpeckerJsonOptions = JsonSerializerOptions()
+    oxpeckerJsonOptions.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase  // camelCase
+    oxpeckerJsonOptions.WriteIndented <- true
+    oxpeckerJsonOptions.NumberHandling <- JsonNumberHandling.Strict
+    oxpeckerJsonOptions.Converters.Add(jsonFSharpConverter)
+
     bldr.Services
+        // Configure HttpJsonOptions (for ASP.NET Core's serialization)
         .ConfigureHttpJsonOptions(fun options ->
             options.SerializerOptions.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase
             options.SerializerOptions.WriteIndented <- true
-            // If we do not set the NumberHandling to Strict, then the OpenAPI schema generator will generate a schema
-            // that allows numbers to be represented as strings (the type will be `string | integer`), which is not what
-            // we want in this case. Setting it to Strict ensures that the generated schema correctly reflects the
-            // expected JSON structure.
-            // See https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/include-metadata?view=aspnetcore-10.0&tabs=minimal-apis#numeric-types for more details.
             options.SerializerOptions.NumberHandling <- JsonNumberHandling.Strict
-            options.SerializerOptions.Converters.Add(Serialization.JsonStringEnumConverter()))
+            options.SerializerOptions.Converters.Add(jsonFSharpConverter)
+        )
         .AddRouting()
         .AddOxpecker()
+        // Register Oxpecker's SystemTextJsonSerializer
+        .AddSingleton<IJsonSerializer>(Oxpecker.SystemTextJsonSerializer(oxpeckerJsonOptions))
         .AddOpenApi(
             "v1",
             fun options ->
@@ -36,6 +52,7 @@ let addOxpecker (bldr: WebApplicationBuilder) =
                         doc.Info.Version <- "v1"
                         Task.CompletedTask)
                     .AddSchemaTransformer(FSharpOptionSchemaTransformer())
+                    .AddSchemaTransformer<FSharpUnionSchemaTransformer>()
                 |> ignore
         )
     |> ignore
